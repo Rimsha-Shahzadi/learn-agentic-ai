@@ -181,30 +181,107 @@
 # output = chain.invoke("my first value is 50 and second is minus 5")
 # print("output", output)
 
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages.human import HumanMessage
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_core.messages.human import HumanMessage
+# from dotenv import load_dotenv
+# import os
+# load_dotenv()
+
+# llm = ChatGoogleGenerativeAI(
+#     model="gemini-1.5-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
+
+
+# def deposit_money(name:str , bank_account:str, amount:int) -> dict:
+#     """Deposit Money in Bank Account
+#     Args:
+#         name (str): Name of the person
+#         bank_account (str): Bank Account Number
+#         amount (int): Amount of money to be deposited
+#     Returns:
+#         dict: a dict
+#     """
+#     return {
+#         "status":f"Successfully Deposited {amount} in {bank_account} for {name}"}
+
+# toolwalallm = llm.bind_tools([deposit_money])
+
+# finalOutput = toolwalallm.invoke([HumanMessage(content=f"Deposit 1000 in 1234567890 for John")])
+
+# print(finalOutput)
+
+# from langchain_google_genai import ChatGoogleGenerativeAI
+# from langchain_core.messages.human import HumanMessage
+# from dotenv import load_dotenv
+# import os
+# load_dotenv()
+# llm = ChatGoogleGenerativeAI(
+#     model="gemini-1.5-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
+
+
+# def deposit_money(name:str, bank_account:str, amount:int) ->dict:
+#     """Deposit money in bank account
+#     Args:
+#        name (srt): Name of person 
+#        bank_account (str): Bank account number
+#        amount (int): Ammount to be deposited
+#     Returns:
+#        dict: a dict
+#     """
+#     return {
+#         "status":f"Successfully deposited {amount} in {bank_account}  for{name}"}
+# toolllm = llm.bind_tools([deposit_money]) 
+# finalOutput = toolllm.invoke([HumanMessage(content=f"Deposit 5000 in 1234567890 for Rimi")])
+# print(finalOutput)  
+
+    
+
+
+
+from langchain.agents import AgentExecutor
+from langchain.agents import create_tool_calling_agent
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.vectorstores import FAISS
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.tools.retriever import create_retriever_tool
+from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain import hub
+import os 
 from dotenv import load_dotenv
-import os
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
 
+search = TavilySearchResults(tavily_api_key=os.getenv("TAVILY_API_KEY"))
 
-def deposit_money(name:str , bank_account:str, amount:int) -> dict:
-    """Deposit Money in Bank Account
-    Args:
-        name (str): Name of the person
-        bank_account (str): Bank Account Number
-        amount (int): Amount of money to be deposited
-    Returns:
-        dict: a dict
-    """
-    return {
-        "status":f"Successfully Deposited {amount} in {bank_account} for {name}"}
+loader = WebBaseLoader("https://github.com/Rimsha-Shahzadi")
+docs = loader.load()
+documents = RecursiveCharacterTextSplitter(
+    chunk_size=800, chunk_overlap=300
+).split_documents(docs)
+vector = FAISS.from_documents(documents, GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
+retriever = vector.as_retriever()
 
-toolwalallm = llm.bind_tools([deposit_money])
-
-finalOutput = toolwalallm.invoke([HumanMessage(content=f"Deposit 1000 in 1234567890 for John")])
-
-print(finalOutput)
+retriever_tool = create_retriever_tool(
+    retriever,
+    "techloset_research",
+    "Search for information about Techloset"
+)
+tools = [search, retriever_tool]
+prompt = hub.pull()
+agent = create_tool_calling_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+message_history = ChatMessageHistory()
+agent_with_chat_hitory = RunnableWithMessageHistory(
+    agent_executor,
+    lambda session_id: message_history,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+)
+while True:
+    agent_with_chat_history.invoke(
+        {"input": input("How i can help you today?")},
+        config={"congfigurable": {"session_id", "test123"}},
+    )
