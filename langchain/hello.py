@@ -237,51 +237,77 @@
 
 
 
-from langchain.agents import AgentExecutor
-from langchain.agents import create_tool_calling_agent
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import FAISS
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.tools.retriever import create_retriever_tool
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain import hub
-import os 
-from dotenv import load_dotenv
-load_dotenv()
+# from langchain.agents import AgentExecutor
+# from langchain.agents import create_tool_calling_agent
+# from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+# from langchain_community.tools.tavily_search import TavilySearchResults
+# from langchain_community.document_loaders import WebBaseLoader
+# from langchain_community.vectorstores import FAISS
+# from langchain_text_splitters import RecursiveCharacterTextSplitter
+# from langchain.tools.retriever import create_retriever_tool
+# from langchain_community.chat_message_histories import ChatMessageHistory
+# from langchain_core.runnables.history import RunnableWithMessageHistory
+# from langchain import hub
+# import os 
+# from dotenv import load_dotenv
+# load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=os.getenv("GOOGLE_API_KEY"))
 
-search = TavilySearchResults(tavily_api_key=os.getenv("TAVILY_API_KEY"))
+# search = TavilySearchResults(tavily_api_key=os.getenv("TAVILY_API_KEY"))
 
-loader = WebBaseLoader("https://github.com/Rimsha-Shahzadi")
-docs = loader.load()
-documents = RecursiveCharacterTextSplitter(
-    chunk_size=800, chunk_overlap=300
-).split_documents(docs)
-vector = FAISS.from_documents(documents, GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
-retriever = vector.as_retriever()
+# loader = WebBaseLoader("https://github.com/Rimsha-Shahzadi")
+# docs = loader.load()
+# documents = RecursiveCharacterTextSplitter(
+#     chunk_size=800, chunk_overlap=300
+# ).split_documents(docs)
+# vector = FAISS.from_documents(documents, GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
+# retriever = vector.as_retriever()
 
-retriever_tool = create_retriever_tool(
-    retriever,
-    "techloset_research",
-    "Search for information about Techloset"
+# retriever_tool = create_retriever_tool(
+#     retriever,
+#     "techloset_research",
+#     "Search for information about Techloset"
+# )
+# tools = [search, retriever_tool]
+# prompt = hub.pull()
+# agent = create_tool_calling_agent(llm, tools, prompt)
+# agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+# message_history = ChatMessageHistory()
+# agent_with_chat_hitory = RunnableWithMessageHistory(
+#     agent_executor,
+#     lambda session_id: message_history,
+#     input_messages_key="input",
+#     history_messages_key="chat_history",
+# )
+# while True:
+#     agent_with_chat_history.invoke(
+#         {"input": input("How i can help you today?")},
+#         config={"congfigurable": {"session_id", "test123"}},
+#     )
+
+
+
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div(
+    children=[
+        html.H1('My Dashboard'),
+        dcc.Graph(
+            id='My Graph',
+            figure={
+                'data': [],
+                'layout': {
+                    'title': 'Sample Graph'
+                }
+            }
+        )
+    ]
 )
-tools = [search, retriever_tool]
-prompt = hub.pull()
-agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-message_history = ChatMessageHistory()
-agent_with_chat_hitory = RunnableWithMessageHistory(
-    agent_executor,
-    lambda session_id: message_history,
-    input_messages_key="input",
-    history_messages_key="chat_history",
-)
-while True:
-    agent_with_chat_history.invoke(
-        {"input": input("How i can help you today?")},
-        config={"congfigurable": {"session_id", "test123"}},
-    )
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
