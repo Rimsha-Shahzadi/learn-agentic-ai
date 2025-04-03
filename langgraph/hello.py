@@ -30,15 +30,32 @@
 
 
 #langgraph
-from typing_extensions import TypedDict
-class LearningState(TypedDict):
-    prompt: str
+# from typing_extensions import TypedDict
+# class LearningState(TypedDict):
+    # prompt: str
 
-Lahore_state = LearningState(prompt="Hello Rimi From Lahore")   
+# Lahore_state = LearningState(prompt="Hello Rimi From Lahore")   
 
-print(Lahore_state)
-print(Lahore_state['prompt'])
-print(Lahore_state['prompt'] + "How are you?")
+# print(Lahore_state)
+# print(Lahore_state['prompt'])
+# print(Lahore_state['prompt'] + "How are you?")
+
+# def node_1(state: LearningState) -> LearningState:
+#     print("---Node 1 state---", state)
+#     return {"prompt": state["prompt"] + "I am"}
+# def node_2(state: LearningState) -> LearningState:
+#     print("---Node 2 state---", state)
+#     return {"prompt": state["prompt"] + "fine"}
+
+from IPython.display import Image, display 
+from langgraph.graph import StateGraph, START , END
+from langgraph.graph.state import CompiledStateGraph 
+
+builder:StateGraph = StateGraph(state_schema=LearningState)
+print(type(builder))
+
+
+
 
 
    
